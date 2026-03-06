@@ -2,8 +2,8 @@ import React from 'react';
 
 /**
  * Receipt component for DingDong's Laundry Station.
- * Designed to be clean, simple, and printable on any printer.
- * Uses utility classes for layout and custom @media print styles.
+ * Uses inline styles so it renders correctly both in-app and when exported to PDF
+ * via the Electron printToPDF IPC flow (no Tailwind dependency in the hidden window).
  */
 export default function Receipt({ transaction }) {
     if (!transaction) return null;
@@ -27,7 +27,6 @@ export default function Receipt({ transaction }) {
 
     const formatTime = (timeStr) => {
         if (!timeStr) return '';
-        // Handle HH:mm:ss or HH:mm
         const [hours, minutes] = timeStr.split(':');
         const h = parseInt(hours);
         const ampm = h >= 12 ? 'PM' : 'AM';
@@ -35,101 +34,116 @@ export default function Receipt({ transaction }) {
         return `${h12}:${minutes} ${ampm}`;
     };
 
+    const s = {
+        container: {
+            background: '#fff',
+            color: '#000',
+            padding: '32px 24px',
+            fontFamily: "'Courier New', Courier, monospace",
+            maxWidth: '380px',
+            margin: '0 auto',
+            fontSize: '13px',
+        },
+        center: { textAlign: 'center', marginBottom: '20px' },
+        h1: { fontSize: '22px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 4px' },
+        subtitle: { fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 },
+        divider: { borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '4px 0', margin: '8px 0', fontSize: '11px', textAlign: 'center' },
+        row: { display: 'flex', justifyContent: 'space-between', marginBottom: '4px' },
+        bold: { fontWeight: 'bold' },
+        sectionDivider: { borderTop: '1px dashed #bbb', marginTop: '8px', paddingTop: '8px' },
+        tableHeader: { display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #000', paddingBottom: '4px', marginBottom: '8px', fontWeight: 'bold', fontSize: '11px' },
+        itemRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '6px' },
+        totalSection: { borderTop: '2px solid #000', paddingTop: '8px', marginBottom: '20px' },
+        totalRow: { display: 'flex', justifyContent: 'space-between', fontSize: '17px', fontWeight: 'bold' },
+        vatNote: { fontSize: '10px', fontStyle: 'italic', color: '#666', marginTop: '4px' },
+        pickupBox: { background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '6px', padding: '12px', textAlign: 'center', marginBottom: '20px' },
+        pickupLabel: { fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px' },
+        pickupDate: { fontSize: '17px', fontWeight: 'bold', margin: '4px 0' },
+        footer: { textAlign: 'center', fontSize: '10px', borderTop: '1px solid #ddd', paddingTop: '8px' },
+    };
+
     return (
-        <div id="printable-receipt" className="receipt-container bg-white text-black p-8 font-mono max-w-[400px] mx-auto border-2 border-gray-100 mb-20 print:border-0 print:p-0 print:m-0 print:max-w-none">
+        <div id="printable-receipt" style={s.container}>
             {/* Header */}
-            <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold uppercase tracking-wider mb-1">DingDong's</h1>
-                <p className="text-sm font-bold uppercase">Laundry Station & Scheduling</p>
-                <div className="mt-2 text-xs border-y border-black py-1">
-                    OFFICIAL RECEIPT
-                </div>
+            <div style={s.center}>
+                <h1 style={s.h1}>DingDong's</h1>
+                <p style={s.subtitle}>Laundry Station &amp; Scheduling</p>
+                <div style={s.divider}>OFFICIAL RECEIPT</div>
             </div>
 
             {/* Transaction Info */}
-            <div className="space-y-1 mb-6 text-sm">
-                <div className="flex justify-between">
+            <div style={{ marginBottom: '20px' }}>
+                <div style={s.row}>
                     <span>TXN ID:</span>
-                    <span className="font-bold">#{TransactionID}</span>
+                    <span style={s.bold}>#{TransactionID}</span>
                 </div>
-                <div className="flex justify-between">
+                <div style={s.row}>
                     <span>Date:</span>
                     <span>{formatLongDate(TransactionDate)}</span>
                 </div>
-                <div className="flex justify-between border-t border-dashed border-gray-300 pt-1 mt-2">
+                <div style={{ ...s.row, ...s.sectionDivider }}>
                     <span>Customer:</span>
-                    <span className="font-bold">{CustomerName}</span>
+                    <span style={s.bold}>{CustomerName}</span>
                 </div>
-                <div className="flex justify-between">
+                <div style={s.row}>
                     <span>Contact:</span>
                     <span>{ContactNumber}</span>
                 </div>
             </div>
 
             {/* Items Table */}
-            <div className="mb-6">
-                <div className="flex justify-between text-xs font-bold border-b-2 border-black pb-1 mb-2">
-                    <span className="flex-1">SERVICE</span>
-                    <span className="w-16 text-right">QTY</span>
-                    <span className="w-20 text-right">PRICE</span>
+            <div style={{ marginBottom: '20px' }}>
+                <div style={s.tableHeader}>
+                    <span style={{ flex: 1 }}>SERVICE</span>
+                    <span style={{ width: '60px', textAlign: 'right' }}>QTY</span>
+                    <span style={{ width: '80px', textAlign: 'right' }}>PRICE</span>
                 </div>
-                <div className="space-y-2 text-sm">
+                <div>
                     {items && items.map((item, index) => (
-                        <div key={index} className="flex justify-between items-start">
-                            <span className="flex-1 truncate pr-2 uppercase">{item.ServiceName}</span>
-                            <span className="w-16 text-right">{item.Quantity}kg</span>
-                            <span className="w-20 text-right">₱{parseFloat(item.Subtotal).toFixed(2)}</span>
+                        <div key={index} style={s.itemRow}>
+                            <span style={{ flex: 1, textTransform: 'uppercase', paddingRight: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.ServiceName}</span>
+                            <span style={{ width: '60px', textAlign: 'right' }}>{item.Quantity}kg</span>
+                            <span style={{ width: '80px', textAlign: 'right' }}>₱{parseFloat(item.Subtotal).toFixed(2)}</span>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* Total */}
-            <div className="border-t-2 border-black pt-2 mb-6">
-                <div className="flex justify-between text-lg font-bold">
+            <div style={s.totalSection}>
+                <div style={s.totalRow}>
                     <span>TOTAL:</span>
                     <span>₱{parseFloat(TotalAmount).toFixed(2)}</span>
                 </div>
-                <p className="text-[10px] italic mt-1 text-gray-500 print:text-black">Prices are inclusive of VAT.</p>
+                <p style={s.vatNote}>Prices are inclusive of VAT.</p>
             </div>
 
             {/* Pickup Info */}
-            <div className="bg-gray-50 p-3 rounded border border-gray-200 mb-6 print:bg-transparent print:border-black text-center">
-                <p className="text-xs font-bold uppercase mb-1">Schedule for Pickup</p>
-                <p className="font-bold text-lg">{formatLongDate(PickupDate)}</p>
-                <p className="text-sm">{formatTime(PickupTime)}</p>
+            <div style={s.pickupBox}>
+                <p style={s.pickupLabel}>Schedule for Pickup</p>
+                <p style={s.pickupDate}>{formatLongDate(PickupDate)}</p>
+                <p>{formatTime(PickupTime)}</p>
             </div>
 
             {/* Footer */}
-            <div className="text-center text-[10px] space-y-1">
+            <div style={s.footer}>
                 <p>Thank you for choosing DingDong's!</p>
                 <p>Please present this receipt when claiming.</p>
-                <p className="mt-4 border-t border-gray-200 pt-2 print:border-black">Generated at {new Date().toLocaleString()}</p>
+                <p style={{ marginTop: '8px' }}>Generated at {new Date().toLocaleString()}</p>
             </div>
 
-            {/* Printing Styles Inline for Easy Injection */}
+            {/* Print media styles (for the window.print() button) */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @media print {
-                    body * {
-                        visibility: hidden;
-                    }
-                    #printable-receipt, #printable-receipt * {
-                        visibility: visible;
-                    }
+                    body * { visibility: hidden; }
+                    #printable-receipt, #printable-receipt * { visibility: visible; }
                     #printable-receipt {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        max-width: none;
-                        border: none;
-                        padding: 0;
-                        margin: 0;
+                        position: absolute; left: 0; top: 0;
+                        width: 100%; max-width: none;
+                        border: none; padding: 0; margin: 0;
                     }
-                    .no-print {
-                        display: none !important;
-                    }
+                    .no-print { display: none !important; }
                 }
             ` }} />
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Calendar, Printer } from 'lucide-react';
+import { FileText, Calendar, Download } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function TransactionList({ apiBaseUrl, onPrint }) {
@@ -122,9 +122,9 @@ export default function TransactionList({ apiBaseUrl, onPrint }) {
                                             .then(fullTxn => onPrint(fullTxn));
                                     }}
                                     className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider border border-transparent hover:border-indigo-100"
-                                    title="Print Receipt"
+                                    title="Download/Print Receipt"
                                 >
-                                    <Printer size={14} /> Print
+                                    <Download size={14} /> Receipt
                                 </button>
                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${getStatusColor(t.LaundryStatus)}`}>
                                     {t.LaundryStatus}

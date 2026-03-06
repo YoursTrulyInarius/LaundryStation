@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Home, Users, PlusCircle, Receipt, LogOut, BarChart3 } from 'lucide-react';
+
+import { Home, Users, PlusCircle, Receipt, LogOut, BarChart3, Download, Printer, X } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import CustomerList from './components/CustomerList';
 import TransactionForm from './components/TransactionForm';
@@ -28,9 +29,27 @@ function App() {
 
   const handlePrint = (transaction) => {
     setPrintTransaction(transaction);
-    setTimeout(() => {
-      window.print();
-    }, 500);
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      const element = document.getElementById('printable-receipt');
+      if (!element) {
+        console.error('Receipt element not found');
+        return;
+      }
+      const receiptHtml = element.outerHTML;
+      const { ipcRenderer } = window.require('electron');
+      const result = await ipcRenderer.invoke('print-to-pdf', {
+        transactionId: printTransaction?.TransactionID,
+        receiptHtml
+      });
+      if (!result.success && result.error !== 'Cancelled') {
+        console.error('PDF download error:', result.error);
+      }
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
   };
 
   const renderContent = () => {
@@ -142,19 +161,27 @@ function App() {
               onClick={() => setPrintTransaction(null)}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors print:hidden"
             >
-              <LogOut size={20} className="rotate-90" />
+              <X size={20} />
             </button>
             <ReceiptComponent transaction={printTransaction} />
-            <div className="mt-6 flex gap-3 print:hidden">
-              <button
-                onClick={() => window.print()}
-                className="flex-1 bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-100 active:bg-indigo-700 transition-all flex justify-center items-center gap-2"
-              >
-                <PlusCircle size={20} className="rotate-45" /> Print Receipt
-              </button>
+            <div className="mt-6 flex flex-col gap-3 print:hidden">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleDownloadPdf}
+                  className="flex-1 bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-100 active:bg-indigo-700 transition-all flex justify-center items-center gap-2"
+                >
+                  <Download size={20} /> Download
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 bg-white text-indigo-600 border border-indigo-200 font-bold py-3.5 rounded-xl active:bg-indigo-50 transition-all flex justify-center items-center gap-2"
+                >
+                  <Printer size={20} /> Print
+                </button>
+              </div>
               <button
                 onClick={() => setPrintTransaction(null)}
-                className="flex-1 bg-gray-100 text-gray-600 font-bold py-3.5 rounded-xl active:bg-gray-200 transition-all"
+                className="w-full bg-gray-100 text-gray-600 font-bold py-3.5 rounded-xl active:bg-gray-200 transition-all"
               >
                 Close
               </button>
