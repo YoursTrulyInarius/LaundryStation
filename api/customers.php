@@ -10,17 +10,17 @@ if ($method === 'OPTIONS') {
 
 if ($method === 'GET') {
     if (isset($_GET['id'])) {
-        $stmt = $pdo->prepare("SELECT * FROM CUSTOMER WHERE CustomerID = ?");
+        $stmt = $pdo->prepare("SELECT * FROM CUSTOMER WHERE CustomerID = ? AND is_deleted = 0");
         $stmt->execute([$_GET['id']]);
         $customer = $stmt->fetch();
         echo json_encode($customer);
     } else if (isset($_GET['search'])) {
         $search = '%' . $_GET['search'] . '%';
-        $stmt = $pdo->prepare("SELECT * FROM CUSTOMER WHERE Name LIKE ? OR ContactNumber LIKE ? OR Address LIKE ? ORDER BY Name");
+        $stmt = $pdo->prepare("SELECT * FROM CUSTOMER WHERE (Name LIKE ? OR ContactNumber LIKE ? OR Address LIKE ?) AND is_deleted = 0 ORDER BY Name");
         $stmt->execute([$search, $search, $search]);
         echo json_encode($stmt->fetchAll());
     } else {
-        $stmt = $pdo->query("SELECT * FROM CUSTOMER ORDER BY Name ASC");
+        $stmt = $pdo->query("SELECT * FROM CUSTOMER WHERE is_deleted = 0 ORDER BY Name ASC");
         echo json_encode($stmt->fetchAll());
     }
 } elseif ($method === 'POST') {
@@ -70,13 +70,7 @@ if ($method === 'GET') {
         echo json_encode(["error" => "Failed to update customer"]);
     }
 } elseif ($method === 'DELETE') {
-    if (!isset($_GET['id'])) {
-        http_response_code(400);
-        echo json_encode(["error" => "CustomerID is required"]);
-        exit();
-    }
-    
-    $stmt = $pdo->prepare("DELETE FROM CUSTOMER WHERE CustomerID = ?");
+    $stmt = $pdo->prepare("UPDATE CUSTOMER SET is_deleted = 1, deleted_at = NOW() WHERE CustomerID = ?");
     $success = $stmt->execute([$_GET['id']]);
     
     if ($success) {

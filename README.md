@@ -12,6 +12,8 @@ DingDong's Laundry Station is a computerized management system designed to strea
 - **Download Receipts**: Save a professional PDF receipt directly to your computer.
 - **Print Receipts**: Send the receipt directly to any connected printer.
 - **Track Performance**: View daily revenue and pending order "Waitlists" at a glance.
+- **Trash Repository**: Recover deleted customers or orders within 30 days.
+- **Auto-Cleanup**: System automatically erases deleted records after 30 days.
 
 ---
 
@@ -47,6 +49,7 @@ erDiagram
         string Name
         string ContactNumber
         string Address
+        timestamp deleted_at
     }
 
     LAUNDRY_SERVICE {
@@ -64,6 +67,7 @@ erDiagram
         string LaundryStatus
         date PickupDate
         time PickupTime
+        timestamp deleted_at
     }
 
     TRANSACTION_DETAIL {
@@ -79,6 +83,7 @@ erDiagram
         string Username
         string PasswordHash
         enum Role
+        timestamp deleted_at
     }
 ```
 
@@ -161,3 +166,11 @@ This will:
 - **Fixed Close Button Icon**: The receipt modal's close button was previously using an icon that looked like a download arrow. It now correctly shows an ✕ icon.
 - **Download Icon in Orders List**: The receipt action button in the Orders tab now uses a download icon for clarity.
 - **Receipt Inline Styles**: The receipt component was refactored to use inline CSS so it renders correctly in the exported PDF (independent of Tailwind CSS).
+
+### v1.2 — Soft Delete & Trash Repository
+- **Soft-Delete System**: Records are no longer permanently deleted immediately. Instead, they are marked as "deleted" and moved to a hidden repository.
+- **Trash Repository**: A new "Trash" tab allows admins to view, restore, or permanently "Erase" deleted records.
+- **30-Day Auto-Cleanup**: The system tracks the exact time of deletion and automatically removes records that have been in the Trash for more than 30 days.
+- **Countdown Timers**: Each item in the Trash shows a "Days Remaining" countdown for better visibility.
+- **Automatic Redirection**: Deleting a record now automatically takes the user to the Trash view to allow for immediate restoration if needed.
+- **Removed Staff Management**: Streamlined the admin interface by removing the dedicated staff management section.

@@ -114,6 +114,7 @@ export default function CustomerList({ apiBaseUrl }) {
                             });
                             setShowDetailModal(false);
                             fetchCustomers();
+                            if (onNavigate) onNavigate('trash');
                         }
                     })
                     .catch(err => console.error("Delete error:", err));

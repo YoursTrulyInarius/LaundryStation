@@ -14,7 +14,9 @@ CREATE TABLE CUSTOMER (
     CustomerID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(100) NOT NULL,
     ContactNumber VARCHAR(15) NOT NULL,
-    Address VARCHAR(255) NOT NULL
+    Address VARCHAR(255) NOT NULL,
+    is_deleted TINYINT(1) DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 2. LAUNDRY_SERVICE TABLE
@@ -34,6 +36,8 @@ CREATE TABLE `TRANSACTION` (
     LaundryStatus VARCHAR(20) NOT NULL,
     PickupDate DATE,
     PickupTime TIME,
+    is_deleted TINYINT(1) DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     
     FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -55,7 +59,10 @@ CREATE TABLE USERS (
     UserID INT PRIMARY KEY AUTO_INCREMENT,
     Username VARCHAR(50) UNIQUE NOT NULL,
     PasswordHash VARCHAR(255) NOT NULL,
-    Role ENUM('Admin / Owner', 'Laundry Staff / Cashier') NOT NULL
+    Role ENUM('Admin / Owner', 'Laundry Staff / Cashier') NOT NULL,
+    Phone VARCHAR(15),
+    is_deleted TINYINT(1) DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Insert default users

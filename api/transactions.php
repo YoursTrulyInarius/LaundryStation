@@ -14,7 +14,7 @@ if ($method === 'GET') {
             SELECT t.*, c.Name as CustomerName, c.ContactNumber 
             FROM `TRANSACTION` t
             JOIN CUSTOMER c ON t.CustomerID = c.CustomerID
-            WHERE t.TransactionID = ?
+            WHERE t.TransactionID = ? AND t.is_deleted = 0
         ");
         $stmt->execute([$_GET['id']]);
         $transaction = $stmt->fetch();
@@ -38,6 +38,7 @@ if ($method === 'GET') {
             SELECT t.*, c.Name as CustomerName 
             FROM `TRANSACTION` t
             JOIN CUSTOMER c ON t.CustomerID = c.CustomerID
+            WHERE t.is_deleted = 0
             ORDER BY t.TransactionDate DESC, t.TransactionID DESC
             LIMIT 50
         ");
@@ -116,6 +117,21 @@ if ($method === 'GET') {
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Update failed: " . $e->getMessage()]);
+    }
+} elseif ($method === 'DELETE') {
+    if (!isset($_GET['id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "TransactionID is required"]);
+        exit();
+    }
+    
+    try {
+        $stmt = $pdo->prepare("UPDATE `TRANSACTION` SET is_deleted = 1, deleted_at = NOW() WHERE TransactionID = ?");
+        $stmt->execute([$_GET['id']]);
+        echo json_encode(["success" => true]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Delete failed: " . $e->getMessage()]);
     }
 }
 ?>

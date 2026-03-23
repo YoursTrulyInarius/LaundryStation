@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FileText, Calendar, Download } from 'lucide-react';
+import { FileText, Calendar, Download, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-export default function TransactionList({ apiBaseUrl, onPrint }) {
+export default function TransactionList({ apiBaseUrl, onPrint, onNavigate }) {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -85,6 +85,44 @@ export default function TransactionList({ apiBaseUrl, onPrint }) {
         });
     };
 
+    const handleDelete = (id) => {
+        Swal.fire({
+            title: 'Delete Order?',
+            text: "This will move the order to Trash for 30 days.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Delete',
+            confirmButtonColor: '#EF4444',
+            cancelButtonText: 'Cancel',
+            borderRadius: '1.5rem',
+            customClass: {
+                popup: 'rounded-3xl border-0 shadow-2xl',
+                confirmButton: 'rounded-xl font-bold px-6 py-3',
+                cancelButton: 'rounded-xl font-bold px-6 py-3 !text-gray-500'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${apiBaseUrl}/transactions.php?id=${id}`, { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Deleted',
+                                text: 'Order moved to Trash.',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false,
+                                borderRadius: '1.5rem'
+                            });
+                            setTransactions(transactions.filter(t => t.TransactionID !== id));
+                            if (onNavigate) onNavigate('trash');
+                        }
+                    })
+                    .catch(err => console.error("Delete error:", err));
+            }
+        });
+    };
+
     const formatLongDate = (dateStr) => {
         if (!dateStr) return '';
         const d = new Date(dateStr);
@@ -115,20 +153,29 @@ export default function TransactionList({ apiBaseUrl, onPrint }) {
                                     <FileText size={16} className="text-indigo-400" />
                                     TXN #{t.TransactionID}
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        fetch(`${apiBaseUrl}/transactions.php?id=${t.TransactionID}`)
-                                            .then(res => res.json())
-                                            .then(fullTxn => onPrint(fullTxn));
-                                    }}
-                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider border border-transparent hover:border-indigo-100"
-                                    title="Download/Print Receipt"
-                                >
-                                    <Download size={14} /> Receipt
-                                </button>
-                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${getStatusColor(t.LaundryStatus)}`}>
-                                    {t.LaundryStatus}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => {
+                                            fetch(`${apiBaseUrl}/transactions.php?id=${t.TransactionID}`)
+                                                .then(res => res.json())
+                                                .then(fullTxn => onPrint(fullTxn));
+                                        }}
+                                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider border border-transparent hover:border-indigo-100"
+                                        title="Download/Print Receipt"
+                                    >
+                                        <Download size={14} /> Receipt
+                                    </button>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${getStatusColor(t.LaundryStatus)}`}>
+                                        {t.LaundryStatus}
+                                    </span>
+                                    <button
+                                        onClick={() => handleDelete(t.TransactionID)}
+                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete Order"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="mb-3">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Home, Users, PlusCircle, Receipt, LogOut, BarChart3, Download, Printer, X } from 'lucide-react';
+import { Home, Users, PlusCircle, Receipt, LogOut, BarChart3, Download, Printer, X, Trash2 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import CustomerList from './components/CustomerList';
 import TransactionForm from './components/TransactionForm';
@@ -8,6 +8,7 @@ import TransactionList from './components/TransactionList';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import ReceiptComponent from './components/Receipt';
+import Trash from './components/Trash';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -57,15 +58,18 @@ function App() {
       case 'home':
         return <Dashboard apiBaseUrl={API_BASE_URL} onNavigate={setCurrentTab} userRole={currentUser.role} />;
       case 'customers':
-        return <CustomerList apiBaseUrl={API_BASE_URL} />;
+        return <CustomerList apiBaseUrl={API_BASE_URL} onNavigate={setCurrentTab} />;
       case 'new_transaction':
         if (isAdmin) return <Dashboard apiBaseUrl={API_BASE_URL} onNavigate={setCurrentTab} userRole={currentUser.role} />;
         return <TransactionForm apiBaseUrl={API_BASE_URL} onComplete={() => setCurrentTab('transactions')} onPrint={handlePrint} />;
       case 'transactions':
-        return <TransactionList apiBaseUrl={API_BASE_URL} onPrint={handlePrint} />;
+        return <TransactionList apiBaseUrl={API_BASE_URL} onPrint={handlePrint} onNavigate={setCurrentTab} />;
       case 'reports':
         if (!isAdmin) return <Dashboard apiBaseUrl={API_BASE_URL} onNavigate={setCurrentTab} userRole={currentUser.role} />;
         return <Reports apiBaseUrl={API_BASE_URL} />;
+      case 'trash':
+        if (!isAdmin) return <Dashboard apiBaseUrl={API_BASE_URL} onNavigate={setCurrentTab} userRole={currentUser.role} />;
+        return <Trash apiBaseUrl={API_BASE_URL} />;
       default:
         return <Dashboard apiBaseUrl={API_BASE_URL} onNavigate={setCurrentTab} userRole={currentUser.role} />;
     }
@@ -100,7 +104,7 @@ function App() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="bg-white border-t border-gray-100 grid grid-cols-4 fixed bottom-0 max-w-[480px] w-full z-20 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.03)] h-16 print:hidden">
+      <nav className={`bg-white border-t border-gray-100 grid ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} fixed bottom-0 max-w-[480px] w-full z-20 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.03)] h-16 print:hidden`}>
         <NavItem
           icon={<Home size={22} />}
           label="Home"
@@ -136,19 +140,30 @@ function App() {
           />
         )}
 
-        {isAdmin ? (
+        {isAdmin && (
           <NavItem
             icon={<BarChart3 size={22} />}
             label="Reports"
             isActive={currentTab === 'reports'}
             onClick={() => setCurrentTab('reports')}
           />
-        ) : (
+        )}
+
+        {!isAdmin && (
           <NavItem
             icon={<Receipt size={22} />}
             label="Orders"
             isActive={currentTab === 'transactions'}
             onClick={() => setCurrentTab('transactions')}
+          />
+        )}
+
+        {isAdmin && (
+          <NavItem
+            icon={<Trash2 size={22} />}
+            label="Trash"
+            isActive={currentTab === 'trash'}
+            onClick={() => setCurrentTab('trash')}
           />
         )}
       </nav>
