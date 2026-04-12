@@ -11,7 +11,8 @@ DingDong's Laundry Station is a computerized management system designed to strea
 - **Manage Payments**: Track "Pending" vs "Approved" payments with a secure one-way approval workflow.
 - **Download Receipts**: Save a professional PDF receipt directly to your computer.
 - **Print Receipts**: Send the receipt directly to any connected printer.
-- **Track Performance**: View daily revenue and pending order "Waitlists" at a glance.
+- **Track Performance**: View daily stats and interactive "Waitlists" with detailed item views.
+- **Laundry Weight Limit**: Strict 10KG limit per transaction to prevent machine overloading.
 - **Trash Repository**: Recover deleted customers or orders within 30 days.
 - **Auto-Cleanup**: System automatically erases deleted records after 30 days.
 
@@ -97,7 +98,7 @@ erDiagram
    - If they are a returning customer, the staff searches for and selects them.
 3. **Creating an Order (Transaction)**:
    - The staff selects the services the customer wants (e.g., Wash & Fold).
-   - Staff enters the weight (kg) for each service.
+   - Staff enters the weight (kg) for each service (Max 10KG total).
    - The system automatically calculates the subtotal and total amount.
 4. **Pickup Scheduling**:
    - In the final step of the order, the staff selects a specific **Pickup Date** and **Pickup Time**.
@@ -107,7 +108,7 @@ erDiagram
 6. **Operational Monitoring**:
    - The order appears in the **Waitlist** on the Dashboard and the **Orders** tab.
 7. **Payment Approval**:
-   - When the customer pays, the staff marks the status from **Pending** to **Approved**.
+   - When the customer pays, the staff clicks the dedicated **Approve** button next to the status.
    - This is a one-way check — once approved, it cannot be reversed.
 8. **Completion**: Once the laundry is picked up, the transaction cycle is complete.
 
@@ -174,3 +175,10 @@ This will:
 - **Countdown Timers**: Each item in the Trash shows a "Days Remaining" countdown for better visibility.
 - **Automatic Redirection**: Deleting a record now automatically takes the user to the Trash view to allow for immediate restoration if needed.
 - **Removed Staff Management**: Streamlined the admin interface by removing the dedicated staff management section.
+
+### v1.3 — Weight Limit & Dashboard Insights
+- **10KG Laundry Limit**: Implemented a mandatory weight limit of 10KG per transaction. The system prevents proceeding if the limit is exceeded, using SweetAlert2 for user notifications.
+- **Total Weight Indicator**: Added a real-time weight counter in the transaction form that pulses red when approaching the limit.
+- **Interactive Dashboard Orders**: Orders in the pending waitlist are now clickable. Clicking an order opens a detailed view showing every laundry item and its weight.
+- **Improved Approval UX**: Replaced the clickable "Pending" status badge with a dedicated **Approve** button (with icon), reducing accidental clicks and improving clarity.
+- **Enhanced Visuals**: Improved the visibility of "Back" and "Edit" buttons in the navigation flow with custom icons and consistent pill-shaped backgrounds.

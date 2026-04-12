@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Package, CheckCircle2, AlertCircle, TrendingUp, HandCoins, Activity, ChevronDown, AlertTriangle } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function Dashboard({ apiBaseUrl, onNavigate, userRole }) {
     const [stats, setStats] = useState(null);
@@ -67,6 +68,54 @@ export default function Dashboard({ apiBaseUrl, onNavigate, userRole }) {
         const ampm = h >= 12 ? 'PM' : 'AM';
         const h12 = h % 12 || 12;
         return `${h12}:${minutes} ${ampm}`;
+    };
+    
+    const showOrderItems = (order) => {
+        const itemsList = order.items.map(item => 
+            `<div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0 hover:bg-gray-50 px-2 rounded-lg transition-colors">
+                <div class="flex flex-col">
+                    <span class="font-bold text-gray-800 text-sm">${item.ServiceName}</span>
+                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Laundry Item</span>
+                </div>
+                <div class="bg-indigo-50 px-2 py-1 rounded-md">
+                    <span class="text-indigo-600 font-black text-sm">${item.Quantity} KG</span>
+                </div>
+            </div>`
+        ).join('');
+
+        Swal.fire({
+            title: 'Order Details',
+            html: `
+                <div class="text-left mt-4">
+                    <div class="flex items-center gap-3 mb-4 bg-indigo-50/50 p-3 rounded-2xl border border-indigo-100">
+                        <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                            ${order.CustomerName.charAt(0)}
+                        </div>
+                        <div>
+                            <p class="font-bold text-indigo-900 text-sm">${order.CustomerName}</p>
+                            <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">TXN #${order.TransactionID}</p>
+                        </div>
+                    </div>
+                    <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 px-1">Selected Services</p>
+                    <div class="bg-white rounded-2xl p-2 border border-gray-100 shadow-sm">
+                        ${itemsList}
+                    </div>
+                    <div class="mt-4 flex justify-between items-center px-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Total Amount</span>
+                        <span class="text-lg font-black text-emerald-600">₱${parseFloat(order.TotalAmount).toFixed(2)}</span>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'Great, Thanks!',
+            confirmButtonColor: '#4F46E5',
+            borderRadius: '1.5rem',
+            width: '340px',
+            customClass: {
+                popup: 'rounded-3xl border-0 shadow-2xl',
+                title: 'text-indigo-900 font-bold text-lg pt-6',
+                confirmButton: 'rounded-xl font-bold px-8 py-3 text-sm mt-4'
+            }
+        });
     };
 
     return (
@@ -184,7 +233,11 @@ export default function Dashboard({ apiBaseUrl, onNavigate, userRole }) {
                         <div className="space-y-4">
                             {pending_orders?.length > 0 ? (
                                 pending_orders.map(order => (
-                                    <div key={order.TransactionID} className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                                    <div 
+                                        key={order.TransactionID} 
+                                        onClick={() => showOrderItems(order)}
+                                        className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 flex justify-between items-center hover:bg-white hover:border-indigo-300 hover:shadow-md cursor-pointer transition-all active:scale-[0.98] group"
+                                    >
                                         <div className="flex items-center gap-3">
                                             <div className="bg-white p-2.5 rounded-xl shadow-xs text-indigo-600 border border-gray-100">
                                                 <Package size={20} />

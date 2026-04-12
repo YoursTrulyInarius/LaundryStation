@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Search, ShoppingBag, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Plus, Minus, Search, ShoppingBag, ArrowRight, ArrowLeft, CheckCircle2, Edit2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
@@ -30,13 +30,34 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
 
     const addService = (service) => {
         const existing = selectedServices.find(s => s.ServiceID === service.ServiceID);
+        let nextServices;
         if (existing) {
-            setSelectedServices(selectedServices.map(s =>
+            nextServices = selectedServices.map(s =>
                 s.ServiceID === service.ServiceID ? { ...s, Quantity: parseFloat(s.Quantity) + 1 } : s
-            ));
+            );
         } else {
-            setSelectedServices([...selectedServices, { ...service, Quantity: 1 }]);
+            nextServices = [...selectedServices, { ...service, Quantity: 1 }];
         }
+
+        const totalWeight = nextServices.reduce((sum, item) => sum + (parseFloat(item.Quantity) || 0), 0);
+        if (totalWeight > 10) {
+            Swal.fire({
+                title: 'Limit Exceeded',
+                text: 'Laundry weight should not surpass 10KG',
+                icon: 'warning',
+                confirmButtonColor: '#4F46E5',
+                borderRadius: '1.5rem',
+                width: '320px',
+                customClass: {
+                    popup: 'rounded-3xl border-0 shadow-2xl',
+                    title: 'text-indigo-900 font-bold text-lg',
+                    htmlContainer: 'text-gray-500 font-medium text-sm',
+                    confirmButton: 'rounded-xl font-bold px-6 py-2 text-sm'
+                }
+            });
+            return;
+        }
+        setSelectedServices(nextServices);
     };
 
     const updateQuantity = (id, value) => {
@@ -45,12 +66,32 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
             ? value.replace(/[^\d.]/g, '') // Allow only digits and dots
             : value;
 
-        setSelectedServices(selectedServices.map(s => {
+        const nextServices = selectedServices.map(s => {
             if (s.ServiceID === id) {
                 return { ...s, Quantity: cleanValue };
             }
             return s;
-        }));
+        });
+
+        const totalWeight = nextServices.reduce((sum, item) => sum + (parseFloat(item.Quantity) || 0), 0);
+        if (totalWeight > 10) {
+            Swal.fire({
+                title: 'Limit Exceeded',
+                text: 'Laundry weight should not surpass 10KG',
+                icon: 'warning',
+                confirmButtonColor: '#4F46E5',
+                borderRadius: '1.5rem',
+                width: '320px',
+                customClass: {
+                    popup: 'rounded-3xl border-0 shadow-2xl',
+                    title: 'text-indigo-900 font-bold text-lg',
+                    htmlContainer: 'text-gray-500 font-medium text-sm',
+                    confirmButton: 'rounded-xl font-bold px-6 py-2 text-sm'
+                }
+            });
+            return;
+        }
+        setSelectedServices(nextServices);
     };
 
     const removeService = (id) => {
@@ -58,8 +99,26 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
     };
 
     const totalAmount = selectedServices.reduce((sum, item) => sum + (item.Price * (parseFloat(item.Quantity) || 0)), 0);
+    const totalWeight = selectedServices.reduce((sum, item) => sum + (parseFloat(item.Quantity) || 0), 0);
 
     const handleSubmit = () => {
+        if (totalWeight > 10) {
+            Swal.fire({
+                title: 'Limit Exceeded',
+                text: 'Laundry weight should not surpass 10KG',
+                icon: 'warning',
+                confirmButtonColor: '#4F46E5',
+                borderRadius: '1.5rem',
+                width: '320px',
+                customClass: {
+                    popup: 'rounded-3xl border-0 shadow-2xl',
+                    title: 'text-indigo-900 font-bold text-lg',
+                    htmlContainer: 'text-gray-500 font-medium text-sm',
+                    confirmButton: 'rounded-xl font-bold px-6 py-2 text-sm'
+                }
+            });
+            return;
+        }
         // Determine tomorrow's date for pickup
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -165,7 +224,12 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-bold text-gray-900">Add Services</h2>
-                        <button onClick={() => setStep(1)} className="text-sm font-medium text-indigo-600">Back</button>
+                        <button 
+                            onClick={() => setStep(1)} 
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-wider hover:bg-indigo-100 transition-colors"
+                        >
+                            <ArrowLeft size={14} strokeWidth={3} /> Back
+                        </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-6">
@@ -192,7 +256,12 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
                                 <h3 className="font-bold text-indigo-900 flex items-center gap-2">
                                     <ShoppingBag size={18} /> Selected Items
                                 </h3>
-                                <span className="font-bold text-lg text-emerald-600">₱{totalAmount.toFixed(2)}</span>
+                                <div className="flex flex-col items-end">
+                                    <span className="font-bold text-lg text-emerald-600">₱{totalAmount.toFixed(2)}</span>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${totalWeight > 9 ? 'text-red-600 animate-pulse' : 'text-indigo-400'}`}>
+                                        {totalWeight.toFixed(1)} / 10.0 KG
+                                    </span>
+                                </div>
                             </div>
 
                             <div className="p-4 space-y-3 max-h-40 overflow-y-auto w-full box-border">
@@ -225,7 +294,26 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
 
                             <div className="p-4 bg-white border-t border-gray-100">
                                 <button
-                                    onClick={() => setStep(3)}
+                                    onClick={() => {
+                                        if (totalWeight > 10) {
+                                            Swal.fire({
+                                                title: 'Limit Exceeded',
+                                                text: 'Laundry weight should not surpass 10KG',
+                                                icon: 'warning',
+                                                confirmButtonColor: '#4F46E5',
+                                                borderRadius: '1.5rem',
+                                                width: '320px',
+                                                customClass: {
+                                                    popup: 'rounded-3xl border-0 shadow-2xl',
+                                                    title: 'text-indigo-900 font-bold text-lg',
+                                                    htmlContainer: 'text-gray-500 font-medium text-sm',
+                                                    confirmButton: 'rounded-xl font-bold px-6 py-2 text-sm'
+                                                }
+                                            });
+                                        } else {
+                                            setStep(3);
+                                        }
+                                    }}
                                     className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-md active:bg-indigo-700 transition-colors text-sm"
                                 >
                                     Review Order
@@ -240,7 +328,12 @@ export default function TransactionForm({ apiBaseUrl, onComplete, onPrint }) {
                 <div className="space-y-4">
                     <div className="flex justify-between items-center mb-2">
                         <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
-                        <button onClick={() => setStep(2)} className="text-sm font-medium text-indigo-600">Edit</button>
+                        <button 
+                            onClick={() => setStep(2)} 
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-wider hover:bg-indigo-100 transition-colors"
+                        >
+                            <Edit2 size={14} strokeWidth={3} /> Edit
+                        </button>
                     </div>
 
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

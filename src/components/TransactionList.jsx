@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Calendar, Download, Trash2 } from 'lucide-react';
+import { FileText, Calendar, Download, Trash2, CheckCircle2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function TransactionList({ apiBaseUrl, onPrint, onNavigate }) {
@@ -32,7 +32,7 @@ export default function TransactionList({ apiBaseUrl, onPrint, onNavigate }) {
         if (status === 'Approved' || status === 'Paid') {
             return 'bg-emerald-50 text-emerald-600 border-emerald-100';
         }
-        return 'bg-amber-50 text-amber-600 border-amber-100 cursor-pointer hover:bg-amber-100 transition-colors';
+        return 'bg-amber-50 text-amber-600 border-amber-100';
     };
 
     const handleUpdateStatus = (transactionId, newStatus, customerName) => {
@@ -191,19 +191,21 @@ export default function TransactionList({ apiBaseUrl, onPrint, onNavigate }) {
                             </div>
 
                             <div className="flex justify-between items-end border-t border-gray-50 pt-3">
-                                {t.PaymentStatus === 'Pending' ? (
-                                    <button
-                                        onClick={() => handleUpdateStatus(t.TransactionID, 'Approved', t.CustomerName)}
-                                        className={`text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-wider ${getPaymentColor(t.PaymentStatus)}`}
-                                        title="Click to Approve Payment"
-                                    >
-                                        {t.PaymentStatus}
-                                    </button>
-                                ) : (
+                                <div className="flex items-center gap-2">
                                     <span className={`text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-wider ${getPaymentColor(t.PaymentStatus)}`}>
                                         {t.PaymentStatus}
                                     </span>
-                                )}
+                                    {t.PaymentStatus === 'Pending' && (
+                                        <button
+                                            onClick={() => handleUpdateStatus(t.TransactionID, 'Approved', t.CustomerName)}
+                                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 border border-emerald-100 transition-colors shadow-sm flex items-center gap-1 group"
+                                            title="Approve Payment"
+                                        >
+                                            <CheckCircle2 size={14} className="group-hover:scale-110 transition-transform" />
+                                            <span className="text-[9px] font-black uppercase">Approve</span>
+                                        </button>
+                                    )}
+                                </div>
                                 <span className="font-bold text-lg text-emerald-600">₱{parseFloat(t.TotalAmount).toFixed(2)}</span>
                             </div>
                         </div>

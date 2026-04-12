@@ -19,7 +19,7 @@ if ($method === 'GET') {
     ");
     $dashboard['summary'] = $stmt->fetch();
     
-    // Pending Pickup Orders
+    // Pending Pickup Orders with Items
     $stmt = $pdo->query("
         SELECT t.*, c.Name as CustomerName 
         FROM `TRANSACTION` t
@@ -28,7 +28,19 @@ if ($method === 'GET') {
         ORDER BY t.PickupDate ASC, t.PickupTime ASC
         LIMIT 10
     ");
-    $dashboard['pending_orders'] = $stmt->fetchAll();
+    $orders = $stmt->fetchAll();
+    
+    foreach ($orders as &$order) {
+        $stmtItems = $pdo->prepare("
+            SELECT td.*, s.ServiceName 
+            FROM TRANSACTION_DETAIL td
+            JOIN LAUNDRY_SERVICE s ON td.ServiceID = s.ServiceID
+            WHERE td.TransactionID = ?
+        ");
+        $stmtItems->execute([$order['TransactionID']]);
+        $order['items'] = $stmtItems->fetchAll();
+    }
+    $dashboard['pending_orders'] = $orders;
 
     // Active Services List
     $stmt = $pdo->query("SELECT ServiceName FROM `LAUNDRY_SERVICE`");
